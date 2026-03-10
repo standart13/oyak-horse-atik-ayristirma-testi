@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OYAK HORSE Atık Ayrıştırma Bilgi Testi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; font-family: sans-serif; }
+        .hidden { display: none !important; }
+        .option-btn:disabled { cursor: not-allowed; }
+        .correct-answer { background-color: #22c55e !important; color: white !important; border-color: #22c55e !important; }
+        .wrong-answer { background-color: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen text-slate-800">
+
+    <div id="app" class="w-full max-w-2xl bg-white rounded-xl shadow-lg overflow-hidden m-4 border border-slate-200">
+        
+        <div class="bg-slate-900 text-white p-6 text-center">
+            <h1 class="text-2xl font-bold tracking-wide">OYAK HORSE</h1>
+            <p id="header-subtitle" class="text-slate-400 mt-1 uppercase text-sm font-semibold tracking-widest">Atık Ayrıştırma Bilgi Testi</p>
+        </div>
+
+        <div class="p-8">
+            <div id="screen-login">
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-slate-700 mb-2" for="user-name">Ad Soyad</label>
+                    <input type="text" id="user-name" class="w-full border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-all" placeholder="Tam adınızı giriniz">
+                </div>
+                <div class="mb-8">
+                    <label class="block text-sm font-bold text-slate-700 mb-2" for="user-dept">Departman</label>
+                    <select id="user-dept" class="w-full border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-all bg-white">
+                        <option value="">Seçim Yapınız</option>
+                        <option value="Alüminyum Enjeksiyon">Dökümhane</option>
+                        <option value="Motor">Motor</option>
+                        <option value="Vites Kutusu">Vites Kutusu</option>
+                        <option value="Lojistik">Lojistik</option>
+                        <option value="Kalite">Kalite</option>
+                        <option value="Ar-Ge">Ar-Ge</option>
+                    </select>
+                </div>
+                <div id="login-error" class="text-red-600 text-sm mb-6 hidden font-medium">Lütfen tüm alanları doldurunuz.</div>
+                <div class="space-y-3">
+                    <button onclick="startQuiz()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-lg hover:bg-slate-800 transition-colors shadow-md">Eğitime Başla</button>
+                    <button onclick="showStats()" class="w-full bg-slate-100 text-slate-700 font-bold py-4 rounded-lg hover:bg-slate-200">İstatistikler</button>
+                </div>
+            </div>
+
+            <div id="screen-quiz" class="hidden">
+                <div class="flex justify-between items-center mb-4 text-xs font-bold text-slate-400 uppercase">
+                    <span id="question-counter"></span>
+                    <span id="score-display"></span>
+                </div>
+                <div class="w-full bg-slate-100 h-2 mb-8 rounded-full">
+                    <div id="progress-bar" class="bg-slate-900 h-2 rounded-full transition-all duration-500"></div>
+                </div>
+                <div class="mb-8 flex justify-center bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                    <img id="question-image" src="" alt="Atık" class="max-h-72 object-contain hidden p-4">
+                </div>
+                <h2 id="question-text" class="text-xl font-bold mb-8 text-center text-slate-800 leading-tight"></h2>
+                <div id="options-container" class="grid grid-cols-1 gap-3"></div>
+                <div class="mt-10 flex justify-center">
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden bg-slate-900 text-white font-bold py-3 px-10 rounded-full hover:bg-slate-800 shadow-lg">İleri</button>
+                </div>
+            </div>
+
+            <div id="screen-result" class="hidden text-center py-6">
+                <h2 class="text-3xl font-extrabold text-slate-900 mb-2">Eğitim Tamamlandı</h2>
+                <div class="text-6xl font-black text-slate-900 my-8" id="final-score"></div>
+                <p id="result-message" class="mb-10 text-slate-600 font-medium"></p>
+                <div class="flex flex-col gap-3">
+                    <button onclick="showStats()" class="bg-slate-900 text-white font-bold py-4 rounded-lg">Verileri Görüntüle</button>
+                    <button onclick="appReset()" class="bg-slate-100 text-slate-700 font-bold py-4 rounded-lg">Yeni Katılımcı</button>
+                </div>
+            </div>
+
+            <div id="screen-stats" class="hidden">
+                <div class="flex items-center justify-between mb-8 border-b pb-4">
+                    <h2 class="text-2xl font-black">İstatistikler</h2>
+                    <button onclick="appReset()" class="text-slate-400 font-bold">Kapat</button>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-2 mb-10">
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-slate-500 text-left"><th class="p-3">Birim</th><th class="p-3">Katılımcı</th><th class="p-3 text-right">Ort</th></tr></thead>
+                        <tbody id="dept-stats-body"></tbody>
+                    </table>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-2 max-h-64 overflow-y-auto">
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-slate-500 text-left"><th class="p-3">İsim</th><th class="p-3">Birim</th><th class="p-3 text-right">Skor</th></tr></thead>
+                        <tbody id="user-stats-body"></tbody>
+                    </table>
+                </div>
+                <div class="mt-8 flex flex-col gap-3">
+                    <button onclick="exportData()" class="bg-emerald-700 text-white font-bold py-4 rounded-lg shadow-md">CSV İndir</button>
+                    <button onclick="clearAllData()" class="text-red-500 text-xs py-2">Sıfırla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const soruHavuzu = [
+            { question: "Görseldeki Tehlikeli Atık kabına aşağıdakilerden hangisi ATILMAZ?", options: ["Yağlı metal talaşı", "Kontamine eldiven", "Temiz karton kutu", "Boş toner"], correctAnswer: 2, image: "kutu-tehlikeli.jpg" },
+            { question: "Aşağıdaki atıklardan hangisi Evsel Atık kutusuna atılmaya uygundur?", options: ["Yağlı üstüpü", "Islanmış peçete", "Alüminyum içecek kutusu", "Bitmiş pil"], correctAnswer: 1, image: "kutu-evsel.jpg" },
+            { question: "Geri Dönüşümlü Ambalaj kabına aşağıdakilerden hangisi atılmamalıdır?", options: ["Temiz poşet", "Yağlı absorban ped", "Metal içecek kutusu", "Plastik şişe"], correctAnswer: 1, image: "kutu-ambalaj.jpg" },
+            { question: "Üretim hattından hattından çıkan yağlı metal talaşları nereye atılmalıdır?", options: ["Tehlikeli Atık", "Evsel Atık", "Naylon Atık", "Plastik atık"], correctAnswer: 0, image: "yagli-talas.jpg" },
+            { question: "Piston yağı kalıntısı içeren bu atıklar için doğru atık kabı hangisidir?", options: ["Evsel Atık", "Plastik atık", "Karton atık", "Tehlikeli Atık"], correctAnswer: 3, image: "piston-yagi.jpg" },
+            { question: "Kullanılmış atık eldivenler hangi üniteye atılmalıdır?", options: ["Tehlikeli Atık", "Evsel Atık", "Plastik atık", "Naylon atık"], correctAnswer: 0, image: "maske-eldiven.jpg" },
+            { question: "Tehlikeli madde taşıyan boş bidonlar nereye atılmalıdır?", options: ["Plastik atık", "Tehlikeli Atık", "Evsel Atık", "Absorban kabı"], correctAnswer: 1, image: "kimyasal-bidon.jpg" },
+            { question: "Yağ sızıntısı temizliğinde kullanılan absorbanlar hangi kutuya atılır?", options: ["Evsel Atık", "Tehlikeli Atık", "Absorban kabı", "Plastik atık"], correctAnswer: 1, image: "yagli-ped.jpg" },
+            { question: "Lojistik biriminden çıkan bu sert plastik şerit çemberler nereye atılmalıdır?", options: ["Naylon atık", "Plastik atık", "Karton atık", "Tehlikeli Atık"], correctAnswer: 1, image: "plastik-cember.jpg" },
+            { question: "Bilgisayar ekipmanlarının hangi atık kabına atılması uygundur?", options: ["Plastik atık", "Evsel Atık", "Tehlikeli Atık", "Kağıt Atık"], correctAnswer: 2, image: "elektronik-atik.jpg" },
+            { question: "Yedek parça ambalajından çıkan temiz poşetler nereye atılır?", options: ["Naylon atık", "Plastik atık", "Evsel Atık", "Tehlikeli Atık"], correctAnswer: 0, image: "temiz-naylon.jpg" },
+            { question: "Tesis içinde bulunan bu atık piller hangi kutuya atılmalıdır?", options: ["Atık pil kutusu", "Tehlikeli Atık", "Evsel Atık", "Naylon atık"], correctAnswer: 0, image: "atik-pil.jpg" },
+            { question: "Kirli kahve bardaklar nereye atılmalıdır?", options: ["Kağıt Atık", "Plastik atık", "Evsel Atık", "Tehlikeli Atık"], correctAnswer: 2, image: "kirli-bardak.jpg" },
+            { question: "Sevkiyat sonrası çıkan bu temiz ambalaj kolileri nereye atılır?", options: ["Atık pil kutusu", "Kağıt Atık", "Karton atık", "Tehlikeli Atık"], correctAnswer: 2, image: "atik-karton.jpg" },
+            { question: "Parça paketlemede kullanılan şeffaf filmler nereye atılır?", options: ["Plastik atık", "Naylon atık", "Evsel Atık", "Karton atık"], correctAnswer: 1, image: "shrink-plastik.png" },
+            { question: "Üretim hatalı sert plastik parçalar nereye atılmalıdır?", options: ["Geri dönüşümlü ambalaj kabı", "Naylon atık", "Evsel Atık", "Plastik atık"], correctAnswer: 3, image: "Plastic-parts-1024x596.png" },
+            { question: "Cam şişeler hangi üniteye atılmalıdır?", options: ["Geri dönüşümlü ambalaj kabı", "Kağıt Atık", "Tehlikeli Atık", "Plastik atık"], correctAnswer: 0, image: "cam-sise.jpg" },
+            { question: "Nem tutucular hangi atık kabına atılmalıdır", options: ["Tehlikeli Atık", "Naylon atık", "Kağıt Atık", "Evsel Atık"], correctAnswer: 3, image: "nem-tutucu.jpg" },
+            { question: "Zemine dökülen yağların temizliğinde kullanılan tozlar nereye atılır?", options: ["Absorban kabı", "Tehlikeli Atık", "Evsel Atık", "Plastik atık"], correctAnswer: 0, image: "absorban-granul.jpg" },
+            { question: "İşleme merkezlerinde kullanılan yağlı üstüpülerin atılacağı ünite hangisidir?", options: ["Evsel Atık", "Absorban kabı", "Tehlikeli Atık", "Naylon atık"], correctAnswer: 2, image: "kirli-ustupu.jpg" },
+            { question: "Ofislerden çıkan gizlilik içermeyen kağıtlar nereye atılmalıdır?", options: ["Karton atık", "Kağıt Atık", "Evsel Atık", "Tehlikeli Atık"], correctAnswer: 1, image: "kagit-atik.jpg" },
+            { question: "Görseldeki Tehlikeli Atık kabına aşağıdakilerden hangisi atılmalıdır?", options: ["Yağlı eldiven", "Yemek artığı", "Pet şişe", "Temiz gazete"], correctAnswer: 0, image: "kutu-tehlikeli.jpg" },
+            { question: "Görseldeki Kağıt Atık kutusuna hangisinin atılması doğrudur?", options: ["Karton koli", "Yağlı pizza kutusu", "Fotokopi kağıdı", "Plastik dosya"], correctAnswer: 2, image: "kutu-kagit.jpg" },
+            { question: "Absorban kabı ünitesine aşağıdakilerden hangisi atılabilir?", options: ["Kullanılmış emici granül", "Temiz streç film", "Metal cıvata", "Atık pil"], correctAnswer: 0, image: "kutu-absorban.jpg" },
+            { question: "Plastik atık kutusuna hangisinin atılması yanlıştır?", options: ["Sert plastik parça", "Plastik çember", "Yağlı plastik bidon", "Temiz plastik kapak"], correctAnswer: 2, image: "kutu-plastik.jpg" },
+            { question: "Aşağıdakilerden hangisi Karton Atık kabına atılmalıdır?", options: ["Yağlı yemek paketi", "Temiz sevkiyat kolisi", "Plastik şerit", "Kırık floresan"], correctAnswer: 1, image: "kutu-karton.jpg" },
+            { question: "Naylon atık kutusuna hangisinin atılması uygundur?", options: ["Yağlı naylon", "Karton koli", "Temiz poşet naylon", "Metal talaş"], correctAnswer: 2, image: "kutu-naylon.jpg" },
+            { question: "Atık pil kutusu ünitesine aşağıdakilerden hangisinin atılması yanlıştır?", options: ["Kalem pil", "Lityum batarya", "Metal kutu", "Düğme pil"], correctAnswer: 2, image: "kutu-pil.jpg" },
+            { question: "Görseldeki Geri Dönüşümlü Ambalaj kabına hangisi atılabilir?", options: ["Yağlı bez", "Temiz plastik şişe", "Yemek artığı", "Asitli sıvı"], correctAnswer: 1, image: "kutu-ambalaj.jpg" },
+            { question: "Aşağıdakilerden hangisi Tehlikeli Atık ünitesine ATILMAZ?", options: ["Boş aerosol kutusu", "Kirli filtre", "Kontamine bez", "Temiz boş koli"], correctAnswer: 3, image: "kutu-tehlikeli.jpg" },
+            { question: "Evsel Atık ünitesine hangisinin atılması DOĞRUDUR?", options: ["Elektronik Kablo", "Islak mendil", "Yağlı talaş", "Floresan lamba"], correctAnswer: 1, image: "kutu-evsel.jpg" },
+            { question: "Görseldeki Kağıt Atık kutusuna aşağıdakilerden hangisinin atılması uygun değildir?", options: ["Eski takvim", "Gazete", "Yağlı yemek kutusu", "Not kağıdı"], correctAnswer: 2, image: "kutu-kagit.jpg" },
+            { question: "Absorban kabına hangisinin atılması yanlıştır?", options: ["Emici toz", "Yağlı granül", "Kontamine emici ped", "Metal talaş"], correctAnswer: 3, image: "kutu-absorban.jpg" },
+            { question: "Plastik atık ünitesine aşağıdakilerden hangisinin atılması uygundur?", options: ["Boş deterjan şişesi", "Yağlı bidon", "Karton koli", "Cam bardak"], correctAnswer: 0, image: "kutu-plastik.jpg" },
+            { question: "Naylon atık ünitesine hangisinin atılması yanlıştır?", options: ["Balonlu naylon", "Temiz streç", "Yağlanmış poşet", "Temiz sevkiyat naylonu"], correctAnswer: 2, image: "kutu-naylon.jpg" },
+            { question: "Tehlikeli Atık kabına hangisi atılmalıdır?", options: ["Gıda artığı", "Yağlı emici ped", "Meyve kabuğu", "Temiz karton"], correctAnswer: 1, image: "kutu-tehlikeli.jpg" },
+            { question: "Geri Dönüşümlü Ambalaj kabına hangisi ATILMAMALIDIR?", options: ["Metal meşrubat kutusu", "Temiz plastik kap", "Yağlı ambalaj", "Plastik su şişesi"], correctAnswer: 2, image: "kutu-ambalaj.jpg" },
+            { question: "Aşağıdaki eşleşmelerden hangisi YANLIŞTIR?", options: ["Bitmiş kutu kola - Geri dönüşümlü ambalaj Atık", "Peçete - Evsel Atık", "Streç - Naylon atık", "Pil - Tehlikeli atık"], correctAnswer: 3, image: "geri-donusum.jpg" }
+        ];
+
+        let state = { currentUser: "", currentDept: "", index: 0, score: 0, currentSet: [], records: JSON.parse(localStorage.getItem('oyak_waste_data')) || [] };
+
+        function showScreen(id) {
+            ['screen-login', 'screen-quiz', 'screen-result', 'screen-stats'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function startQuiz() {
+            const name = document.getElementById('user-name').value.trim();
+            const dept = document.getElementById('user-dept').value;
+            if (!name || !dept) { document.getElementById('login-error').classList.remove('hidden'); return; }
+            state.currentUser = name; state.currentDept = dept; state.index = 0; state.score = 0;
+            state.currentSet = [...soruHavuzu].sort(() => Math.random() - 0.5).slice(0, 8);
+            showScreen('screen-quiz'); renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = state.currentSet[state.index];
+            document.getElementById('question-counter').innerText = `Soru: ${state.index + 1} / ${state.currentSet.length}`;
+            document.getElementById('score-display').innerText = `Puan: ${state.score}`;
+            document.getElementById('progress-bar').style.width = `${((state.index + 1) / state.currentSet.length) * 100}%`;
+            const img = document.getElementById('question-image');
+            img.src = q.image; img.classList.remove('hidden');
+            document.getElementById('question-text').innerText = q.question;
+            const container = document.getElementById('options-container');
+            container.innerHTML = ''; document.getElementById('next-btn').classList.add('hidden');
+            q.options.forEach((opt, i) => {
+                const b = document.createElement('button');
+                b.className = 'option-btn w-full text-left p-5 border rounded-xl font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50';
+                b.innerText = opt; b.onclick = () => handleSelection(i, b);
+                container.appendChild(b);
+            });
+        }
+
+        function handleSelection(idx, btn) {
+            const q = state.currentSet[state.index];
+            const correct = idx === q.correctAnswer;
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach((b, i) => {
+                b.disabled = true;
+                if (i === q.correctAnswer) b.classList.add('correct-answer');
+                else if (i === idx && !correct) b.classList.add('wrong-answer');
+            });
+            if (correct) state.score++;
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            state.index++;
+            if (state.index < state.currentSet.length) renderQuestion();
+            else finish();
+        }
+
+        function finish() {
+            const record = { name: state.currentUser, dept: state.currentDept, score: state.score, date: new Date().toLocaleDateString('tr-TR') };
+            state.records.push(record); localStorage.setItem('oyak_waste_data', JSON.stringify(state.records));
+            document.getElementById('final-score').innerText = `${state.score} / ${state.currentSet.length}`;
+            document.getElementById('result-message').innerText = state.score >= 6 ? "Yüksek farkındalık seviyesi." : "Atık yönetim planını tekrar inceleyiniz.";
+            showScreen('screen-result');
+        }
+
+        function showStats() {
+            const pin = prompt("Şifre:");
+            if (pin === "1970") { renderStatsTable(); showScreen('screen-stats'); }
+            else { alert("Hatalı."); }
+        }
+
+        function renderStatsTable() {
+            const deptMap = {};
+            state.records.forEach(r => {
+                if (!deptMap[r.dept]) deptMap[r.dept] = { sum: 0, count: 0 };
+                deptMap[r.dept].sum += r.score; deptMap[r.dept].count++;
+            });
+            const dBody = document.getElementById('dept-stats-body'); dBody.innerHTML = '';
+            Object.keys(deptMap).forEach(d => {
+                const avg = (deptMap[d].sum / deptMap[d].count).toFixed(1);
+                dBody.innerHTML += `<tr><td class="p-3 border-b text-slate-800 font-semibold">${d}</td><td class="p-3 border-b">${deptMap[d].count}</td><td class="p-3 border-b text-right font-bold">${avg}</td></tr>`;
+            });
+            const uBody = document.getElementById('user-stats-body'); uBody.innerHTML = '';
+            [...state.records].reverse().slice(0, 20).forEach(r => {
+                uBody.innerHTML += `<tr><td class="p-3 border-b">${r.name}</td><td class="p-3 border-b text-xs">${r.dept}</td><td class="p-3 border-b text-right font-bold">${r.score}</td></tr>`;
+            });
+        }
+
+        function exportData() {
+            let csv = "Ad;Birim;Skor;Tarih\n";
+            state.records.forEach(r => { csv += `${r.name};${r.dept};${r.score};${r.date}\n`; });
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob); link.download = "oyak_rapor.csv"; link.click();
+        }
+
+        function clearAllData() { if (confirm("Tüm kayıtlar silinsin mi?")) { state.records = []; localStorage.removeItem('oyak_waste_data'); renderStatsTable(); } }
+        function appReset() { showScreen('screen-login'); }
+    </script>
+</body>
+</html>
+
+
+
