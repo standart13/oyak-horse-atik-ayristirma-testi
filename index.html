@@ -34,7 +34,6 @@
                         <option value="">Seçim Yapınız</option>
                         <option value="Alüminyum Enjeksiyon">Dökümhane</option>
                         <option value="Motor">Motor</option>
-                        <option value="Bakım">Bakım</option>
                         <option value="Vites Kutusu">Vites Kutusu</option>
                         <option value="Lojistik">Lojistik</option>
                         <option value="Kalite">Kalite</option>
@@ -81,6 +80,7 @@
                     <h2 class="text-2xl font-black">İstatistikler</h2>
                     <button onclick="appReset()" class="text-slate-400 font-bold">Kapat</button>
                 </div>
+                <p id="loading-text" class="text-sm text-slate-500 mb-4 hidden">Veriler sunucudan çekiliyor...</p>
                 <div class="flex gap-2 mb-6">
                     <select id="filter-month" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 bg-white" onchange="renderStatsTable()">
                         <option value="">Tüm Aylar</option>
@@ -116,6 +116,7 @@
     </div>
 
     <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbxtSV5O5wNwUVGwbZazdxHEAsIaiVRjNw6I_n9J7p2lz6sI8anxr8p3HulJWh96d8bf/exec";
         const soruHavuzu = [
             { question: "Görseldeki Tehlikeli Atık kabına aşağıdakilerden hangisi ATILMAZ?", options: ["Yağlı metal talaşı", "Kontamine eldiven", "Temiz karton kutu", "Boş toner"], correctAnswer: 2, image: "kutu-tehlikeli.jpg" },
             { question: "Aşağıdaki atıklardan hangisi Evsel Atık kutusuna atılmaya uygundur?", options: ["Yağlı üstüpü", "Islanmış peçete", "Alüminyum içecek kutusu", "Bitmiş pil"], correctAnswer: 1, image: "kutu-evsel.jpg" },
@@ -153,7 +154,7 @@
             { question: "Aşağıdaki eşleşmelerden hangisi YANLIŞTIR?", options: ["Bitmiş kutu kola - Geri dönüşümlü ambalaj Atık", "Peçete - Evsel Atık", "Streç - Naylon atık", "Pil - Tehlikeli atık"], correctAnswer: 3, image: "geri-donusum.jpg" }
         ];
 
-        let state = { currentUser: "", currentDept: "", index: 0, score: 0, currentSet: [], records: JSON.parse(localStorage.getItem('oyak_waste_data')) || [] };
+        let state = { currentUser: "", currentDept: "", index: 0, score: 0, currentSet: [], records: [] };
 
         function showScreen(id) {
             ['screen-login', 'screen-quiz', 'screen-result', 'screen-stats'].forEach(s => document.getElementById(s).classList.add('hidden'));
@@ -206,22 +207,42 @@
             else finish();
         }
 
-        function finish() {
+        async function finish() {
             const record = { name: state.currentUser, dept: state.currentDept, score: state.score, date: new Date().toLocaleDateString('tr-TR') };
-            state.records.push(record); localStorage.setItem('oyak_waste_data', JSON.stringify(state.records));
+            state.records.push(record); 
             document.getElementById('final-score').innerText = `${state.score} / ${state.currentSet.length}`;
             document.getElementById('result-message').innerText = state.score >= 6 ? "Yüksek farkındalık seviyesi." : "Atık yönetim planını tekrar inceleyiniz.";
             showScreen('screen-result');
+
+            try {
+                await fetch(API_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(record)
+                });
+            } catch (error) {
+                console.error(error);
+            }
         }
 
-        function showStats() {
+        async function showStats() {
             const pin = prompt("Şifre:");
             if (pin === "1510") {
+                showScreen('screen-stats');
+                document.getElementById('loading-text').classList.remove('hidden');
+                try {
+                    const response = await fetch(API_URL);
+                    state.records = await response.json();
+                } catch (error) {
+                    console.error(error);
+                }
+                document.getElementById('loading-text').classList.add('hidden');
                 updateMonthDropdown();
                 renderStatsTable();
-                showScreen('screen-stats');
+            } else { 
+                alert("Hatalı."); 
             }
-            else { alert("Hatalı."); }
         }
 
         function updateMonthDropdown() {
@@ -230,10 +251,10 @@
             const months = new Set();
             state.records.forEach(r => {
                 if (r.date) {
-                    const d = r.date.split('.');
+                    const d = String(r.date).split('.');
                     if (d.length === 3) months.add(`${d[1]}.${d[2]}`);
                     else {
-                        const d2 = r.date.split('/');
+                        const d2 = String(r.date).split('/');
                         if (d2.length === 3) months.add(`${d2[1]}/${d2[2]}`);
                     }
                 }
@@ -251,7 +272,7 @@
 
             let filtered = state.records;
             if (fMonth) {
-                filtered = filtered.filter(r => r.date && (r.date.includes(`.${fMonth}`) || r.date.includes(`/${fMonth}`)));
+                filtered = filtered.filter(r => r.date && (String(r.date).includes(`.${fMonth}`) || String(r.date).includes(`/${fMonth}`)));
             }
             if (fDept) {
                 filtered = filtered.filter(r => r.dept === fDept);
@@ -260,7 +281,7 @@
             const deptMap = {};
             filtered.forEach(r => {
                 if (!deptMap[r.dept]) deptMap[r.dept] = { sum: 0, count: 0 };
-                deptMap[r.dept].sum += r.score; deptMap[r.dept].count++;
+                deptMap[r.dept].sum += Number(r.score); deptMap[r.dept].count++;
             });
 
             const dBody = document.getElementById('dept-stats-body'); dBody.innerHTML = '';
@@ -279,7 +300,7 @@
             const fMonth = document.getElementById('filter-month').value;
             const fDept = document.getElementById('filter-dept').value;
             let filtered = state.records;
-            if (fMonth) filtered = filtered.filter(r => r.date && (r.date.includes(`.${fMonth}`) || r.date.includes(`/${fMonth}`)));
+            if (fMonth) filtered = filtered.filter(r => r.date && (String(r.date).includes(`.${fMonth}`) || String(r.date).includes(`/${fMonth}`)));
             if (fDept) filtered = filtered.filter(r => r.dept === fDept);
 
             let csv = "Ad;Birim;Skor;Tarih\n";
@@ -289,9 +310,11 @@
             link.href = URL.createObjectURL(blob); link.download = "oyak_rapor.csv"; link.click();
         }
 
-        function clearAllData() { if (confirm("Tüm kayıtlar silinsin mi?")) { state.records = []; localStorage.removeItem('oyak_waste_data'); renderStatsTable(); } }
+        function clearAllData() { 
+            alert("Merkezi veritabanı silme işlemi güvenlik sebebiyle yalnızca Google Sheets üzerinden manuel yapılabilir."); 
+        }
+        
         function appReset() { showScreen('screen-login'); }
     </script>
 </body>
 </html>
-
