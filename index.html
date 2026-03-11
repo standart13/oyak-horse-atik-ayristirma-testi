@@ -76,9 +76,23 @@
             </div>
 
             <div id="screen-stats" class="hidden">
-                <div class="flex items-center justify-between mb-8 border-b pb-4">
+                <div class="flex items-center justify-between mb-4 border-b pb-4">
                     <h2 class="text-2xl font-black">İstatistikler</h2>
                     <button onclick="appReset()" class="text-slate-400 font-bold">Kapat</button>
+                </div>
+                <div class="flex gap-2 mb-6">
+                    <select id="filter-month" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 bg-white" onchange="renderStatsTable()">
+                        <option value="">Tüm Aylar</option>
+                    </select>
+                    <select id="filter-dept" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 bg-white" onchange="renderStatsTable()">
+                        <option value="">Tüm Departmanlar</option>
+                        <option value="Alüminyum Enjeksiyon">Dökümhane</option>
+                        <option value="Motor">Motor</option>
+                        <option value="Vites Kutusu">Vites Kutusu</option>
+                        <option value="Lojistik">Lojistik</option>
+                        <option value="Kalite">Kalite</option>
+                        <option value="Ar-Ge">Ar-Ge</option>
+                    </select>
                 </div>
                 <div class="bg-slate-50 rounded-xl p-2 mb-10">
                     <table class="w-full text-sm">
@@ -88,7 +102,7 @@
                 </div>
                 <div class="bg-slate-50 rounded-xl p-2 max-h-64 overflow-y-auto">
                     <table class="w-full text-sm">
-                        <thead><tr class="text-slate-500 text-left"><th class="p-3">İsim</th><th class="p-3">Birim</th><th class="p-3 text-right">Skor</th></tr></thead>
+                        <thead><tr class="text-slate-500 text-left"><th class="p-3">İsim</th><th class="p-3">Birim</th><th class="p-3 text-right">Skor</th><th class="p-3 text-right">Tarih</th></tr></thead>
                         <tbody id="user-stats-body"></tbody>
                     </table>
                 </div>
@@ -201,30 +215,74 @@
 
         function showStats() {
             const pin = prompt("Şifre:");
-            if (pin === "1510") { renderStatsTable(); showScreen('screen-stats'); }
+            if (pin === "1510") {
+                updateMonthDropdown();
+                renderStatsTable();
+                showScreen('screen-stats');
+            }
             else { alert("Hatalı."); }
         }
 
-        function renderStatsTable() {
-            const deptMap = {};
+        function updateMonthDropdown() {
+            const monthSelect = document.getElementById('filter-month');
+            const currentVal = monthSelect.value;
+            const months = new Set();
             state.records.forEach(r => {
+                if (r.date) {
+                    const d = r.date.split('.');
+                    if (d.length === 3) months.add(`${d[1]}.${d[2]}`);
+                    else {
+                        const d2 = r.date.split('/');
+                        if (d2.length === 3) months.add(`${d2[1]}/${d2[2]}`);
+                    }
+                }
+            });
+            monthSelect.innerHTML = '<option value="">Tüm Aylar</option>';
+            Array.from(months).sort().forEach(m => {
+                monthSelect.innerHTML += `<option value="${m}">${m}</option>`;
+            });
+            monthSelect.value = currentVal;
+        }
+
+        function renderStatsTable() {
+            const fMonth = document.getElementById('filter-month').value;
+            const fDept = document.getElementById('filter-dept').value;
+
+            let filtered = state.records;
+            if (fMonth) {
+                filtered = filtered.filter(r => r.date && (r.date.includes(`.${fMonth}`) || r.date.includes(`/${fMonth}`)));
+            }
+            if (fDept) {
+                filtered = filtered.filter(r => r.dept === fDept);
+            }
+
+            const deptMap = {};
+            filtered.forEach(r => {
                 if (!deptMap[r.dept]) deptMap[r.dept] = { sum: 0, count: 0 };
                 deptMap[r.dept].sum += r.score; deptMap[r.dept].count++;
             });
+
             const dBody = document.getElementById('dept-stats-body'); dBody.innerHTML = '';
             Object.keys(deptMap).forEach(d => {
                 const avg = (deptMap[d].sum / deptMap[d].count).toFixed(1);
                 dBody.innerHTML += `<tr><td class="p-3 border-b text-slate-800 font-semibold">${d}</td><td class="p-3 border-b">${deptMap[d].count}</td><td class="p-3 border-b text-right font-bold">${avg}</td></tr>`;
             });
+
             const uBody = document.getElementById('user-stats-body'); uBody.innerHTML = '';
-            [...state.records].reverse().slice(0, 20).forEach(r => {
-                uBody.innerHTML += `<tr><td class="p-3 border-b">${r.name}</td><td class="p-3 border-b text-xs">${r.dept}</td><td class="p-3 border-b text-right font-bold">${r.score}</td></tr>`;
+            [...filtered].reverse().slice(0, 20).forEach(r => {
+                uBody.innerHTML += `<tr><td class="p-3 border-b">${r.name}</td><td class="p-3 border-b text-xs">${r.dept}</td><td class="p-3 border-b text-right font-bold">${r.score}</td><td class="p-3 border-b text-xs text-right text-slate-500">${r.date || '-'}</td></tr>`;
             });
         }
 
         function exportData() {
+            const fMonth = document.getElementById('filter-month').value;
+            const fDept = document.getElementById('filter-dept').value;
+            let filtered = state.records;
+            if (fMonth) filtered = filtered.filter(r => r.date && (r.date.includes(`.${fMonth}`) || r.date.includes(`/${fMonth}`)));
+            if (fDept) filtered = filtered.filter(r => r.dept === fDept);
+
             let csv = "Ad;Birim;Skor;Tarih\n";
-            state.records.forEach(r => { csv += `${r.name};${r.dept};${r.score};${r.date}\n`; });
+            filtered.forEach(r => { csv += `${r.name};${r.dept};${r.score};${r.date || '-'}\n`; });
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob); link.download = "oyak_rapor.csv"; link.click();
@@ -235,12 +293,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
