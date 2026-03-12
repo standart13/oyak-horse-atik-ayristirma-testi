@@ -87,6 +87,7 @@
                     </select>
                     <select id="filter-dept" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 bg-white" onchange="renderStatsTable()">
                         <option value="">Tüm Departmanlar</option>
+                        <option value="HSE">İş sağlığı güvenliği ve Çevre</option>
                         <option value="Alüminyum Enjeksiyon">Dökümhane</option>
                         <option value="Motor">Motor</option>
                         <option value="Bakım">Bakım</option>
@@ -126,12 +127,12 @@
             { question: "Tehlikeli madde taşıyan boş bidonlar nereye atılmalıdır?", options: ["Plastik atık", "Tehlikeli Atık", "Evsel Atık", "Absorban kabı"], correctAnswer: 1, image: "kimyasal-bidon.jpg" },
             { question: "Yağ sızıntısı temizliğinde kullanılan absorbanlar hangi kutuya atılır?", options: ["Evsel Atık", "Tehlikeli Atık", "Absorban kabı", "Plastik atık"], correctAnswer: 1, image: "yagli-ped.jpg" },
             { question: "Birimlerden çıkan bu sert plastik şerit çemberler nereye atılmalıdır?", options: ["Naylon atık", "Plastik atık", "Karton atık", "Tehlikeli Atık"], correctAnswer: 1, image: "plastik-cember.jpg" },
-            { question: "Bilgisayar ekipmanlarının hangi atık kabına atılması uygundur?", options: ["Plastik atık", "Evsel Atık", "Tehlikeli Atık", "Kağıt Atık"], correctAnswer: 2, image: "elektronik-atik.jpg" },
+            { question: "Bilgisayar ekipmanlarının hangi atık kabına atılması uygundur?", options: ["Plastik atık", "Evsel Atık", "Elektronik atık kabı", "Tehlikeli Atık"], correctAnswer: 2, image: "elektronik-atik.jpg" },
             { question: "Atölyelerden çıkan ürün paketlemelerinde kullanılan bu temiz poşetler nereye atılır?", options: ["Naylon atık", "Plastik atık", "Evsel Atık", "Tehlikeli Atık"], correctAnswer: 0, image: "temiz-naylon.jpg" },
             { question: "Tesis içinde bulunan atık piller hangi kutuya atılmalıdır?", options: ["Atık pil kutusu", "Tehlikeli Atık", "Evsel Atık", "Naylon atık"], correctAnswer: 0, image: "atik-pil.jpg" },
             { question: "Kirlenmiş bardaklar nereye atılmalıdır?", options: ["Kağıt Atık", "Plastik atık", "Evsel Atık", "Tehlikeli Atık"], correctAnswer: 2, image: "kirli-bardak.jpg" },
             { question: "Sevkiyat sonrası çıkan temiz karton kolileri nereye atılır?", options: ["Atık pil kutusu", "Kağıt Atık", "Karton atık", "Tehlikeli Atık"], correctAnswer: 2, image: "atik-karton.jpg" },
-            { question: "Parça paketlemede kullanılan şeffaf filmler/Shrink nereye atılır?", options: ["Plastik atık", "Naylon atık", "Evsel Atık", "Karton atık"], correctAnswer: 1, image: "shrink-plastik.png" },
+            { question: "Parça paketlemede kullanılan şeffaf filmler/Shrink nereye atılır?", options: ["Plastik atık", "Naylon atık", "Evsel Atık", "Karton atık"], correctAnswer: 1, image: "shrink-plastic.png" },
             { question: "Üretim hatalı sert plastik parçalar nereye atılmalıdır?", options: ["Geri dönüşümlü ambalaj kabı", "Naylon atık", "Evsel Atık", "Plastik atık"], correctAnswer: 3, image: "Plastic-parts-1024x596.png" },
             { question: "Cam şişeler hangi üniteye atılmalıdır?", options: ["Geri dönüşümlü ambalaj kabı", "Kağıt Atık", "Tehlikeli Atık", "Plastik atık"], correctAnswer: 0, image: "cam-sise.jpg" },
             { question: "Nem tutucular hangi atık kabına atılmalıdır", options: ["Tehlikeli Atık", "Naylon atık", "Kağıt Atık", "Absorban Kabı"], correctAnswer: 3, image: "nem-tutucu.jpg" },
@@ -319,5 +320,6 @@
     </script>
 </body>
 </html>
+
 
 
